@@ -20,8 +20,8 @@
         "imageUuidOrDatabaseUri": "b213e7f1-9bae-4f91-acf6-9e278fc542a3",
         "isUuid": true,
         "visible": false,
-        "minfilter": "linear",
-        "magfilter": "linear",
+        "minfilter": "nearest",
+        "magfilter": "nearest",
         "mipfilter": "none",
         "anisotropy": 0
       },
@@ -39,14 +39,14 @@
       "id": "f9941",
       "name": "spriteFrame",
       "userData": {
-        "trimType": "auto",
+        "trimType": "none",
         "trimThreshold": 1,
         "rotated": false,
-        "offsetX": -8,
+        "offsetX": 0,
         "offsetY": 0,
-        "trimX": 96,
+        "trimX": 0,
         "trimY": 0,
-        "width": 640,
+        "width": 848,
         "height": 336,
         "rawWidth": 848,
         "rawHeight": 336,
@@ -61,16 +61,16 @@
         "meshType": 0,
         "vertices": {
           "rawPosition": [
-            -320,
+            -424,
             -168,
             0,
-            320,
+            424,
             -168,
             0,
-            -320,
+            -424,
             168,
             0,
-            320,
+            424,
             168,
             0
           ],
@@ -83,32 +83,32 @@
             3
           ],
           "uv": [
-            96,
-            336,
-            736,
-            336,
-            96,
             0,
-            736,
+            336,
+            848,
+            336,
+            0,
+            0,
+            848,
             0
           ],
           "nuv": [
-            0.11320754716981132,
             0,
-            0.8679245283018868,
             0,
-            0.11320754716981132,
             1,
-            0.8679245283018868,
+            0,
+            0,
+            1,
+            1,
             1
           ],
           "minPos": [
-            -320,
+            -424,
             -168,
             0
           ],
           "maxPos": [
-            320,
+            424,
             168,
             0
           ]

@@ -12,20 +12,7 @@ import {
   SpriteFrame,
 } from "cc";
 const { ccclass, property, executeInEditMode } = _decorator;
-
-export interface Data {
-  identifier: string;
-  uniqueIdentifer: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  bgColor: string;
-  neighbourLevels: any[];
-  customFields: CustomFields;
-  layers: string[];
-  entities: CustomFields;
-}
+import { Convert, LDtk } from "./Convert";
 
 export interface CustomFields {}
 
@@ -48,6 +35,7 @@ export class Test extends Component {
 
   set jsonFile(value) {
     this._jsonFile = value;
+    this.reset();
     this.initComponent();
   }
 
@@ -58,6 +46,7 @@ export class Test extends Component {
 
   set tileSize(value) {
     this._tileSize = value;
+    this.reset();
     this.initComponent();
   }
 
@@ -68,6 +57,7 @@ export class Test extends Component {
 
   private set debug(value) {
     this._debug = value;
+    this.removeDebugNodes();
     this.initComponent();
   }
 
@@ -76,10 +66,10 @@ export class Test extends Component {
   }
 
   private get json() {
-    return this.jsonFile.json as Data;
+    return Convert.toLDtk(JSON.stringify(this.jsonFile.json));
   }
 
-  private setNodeSize(json: Data, node: Node) {
+  private setNodeSize(json: LDtk, node: Node) {
     node.getComponent(UITransform).setContentSize(json.width, json.height);
   }
 
@@ -96,27 +86,36 @@ export class Test extends Component {
     this.removeSubNodes();
   }
 
-  private createLayers(json: Data) {
-    const { layers } = json;
+  private removeDebugNodes() {
+    const children = this.node.children;
+    for (const child of children) {
+      if (child.name.includes("debug")) {
+        child.destroy();
+      }
+    }
+  }
+
+  private createLayers() {
+    const { layers } = this.json;
     for (const layer of layers) {
       const name = layer.replace(".png", "");
-      const subNode = this.createSubNode(name, this.node);
-      this.addSpriteFrameToSubNode(subNode);
-
-      if (this.debug) {
-        const debugSubNode = this.createSubNode(`${name} debug`, this.node);
-        this.addDebugToSubNode(debugSubNode);
+      const hasSubNode = this.node.getChildByName(name);
+      if (!hasSubNode) {
+        const subNode = this.createSubNode(name, this.node);
+        this.addSpriteFrameToSubNode(subNode);
       }
+    }
+  }
 
-      console.log("load", );
-      assetManager.loadAny({ path: '/assets', ext: '.JPG'}, {priority: 2, maxRetryCount: 1, maxConcurrency: 10}, (err, assets) => {
-        if (err) {
-          console.error(err);
-          return;
-        }
-        console.log("asset", assets);
-        // console.log("loaded", asset);
-      });
+  private createDebugLayers() {
+    const { layers } = this.json;
+    for (const layer of layers) {
+      const name = layer.replace(".png", "");
+      const hasSubNode = this.node.getChildByName(`${name} debug`);
+      if (!hasSubNode) {
+        const subNode = this.createSubNode(`${name} debug`, this.node);
+        this.addDebugToSubNode(subNode);
+      }
     }
   }
 
@@ -171,13 +170,16 @@ export class Test extends Component {
   private initComponent() {
     console.log("initComponent", this._jsonFile);
 
-    this.reset();
-
     if (!this.jsonFile) {
       throw new Error("JSON data file is missing");
     }
 
+
     this.setNodeSize(this.json, this.node);
-    this.createLayers(this.json);
+    this.createLayers();
+
+    if (this.debug) {
+      this.createDebugLayers();
+    }
   }
 }
