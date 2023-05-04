@@ -1,197 +1,169 @@
-import { _decorator, CCInteger, Component, Node, JsonAsset, TextAsset, Sprite, SpriteFrame, Graphics, Vec3, CCString, Color, math } from 'cc';
+import { Graphics, assetManager } from "cc";
+import { Color } from "cc";
+import { math } from "cc";
+import { Sprite } from "cc";
+import {
+  _decorator,
+  Component,
+  JsonAsset,
+  Node,
+  UITransform,
+  TextAsset,
+  SpriteFrame,
+} from "cc";
 const { ccclass, property, executeInEditMode } = _decorator;
+import { Convert, LDtk as LDtkModel } from "./Convert";
+import { LDtkLayer } from "./LDtk_Layer";
 
-@ccclass('LDtk')
+export interface CustomFields {}
+
+@ccclass("LDtk")
 @executeInEditMode(true)
 export class LDtk extends Component {
+  @property
+  private _jsonFile: null | JsonAsset = null;
 
-    _csvFile: null | TextAsset = null;
-    _layerImage: null | SpriteFrame = null;
-    _tileSize: number = 32;
-    _ignoredTileNumbers: string = '0';
-    _tileNumbers: string = '1';
+  @property
+  _tileSize: number = 32;
 
-    _debugNode: Node | null = null;
-    _spriteNode: Node | null = null;
-    _colliderNodes: Node[] | null = null;
+  @property({ type: JsonAsset, displayName: "LDtk data" })
+  get jsonFile() {
+    return this._jsonFile;
+  }
 
-    @property({ type: TextAsset, displayName: 'Layer CSV' })
-    get csvFile() {
-        return this._csvFile;
+  set jsonFile(value) {
+    this._jsonFile = value;
+    this.reset();
+    this.initComponent();
+  }
+
+  @property
+  get tileSize() {
+    return this._tileSize;
+  }
+
+  set tileSize(value) {
+    this._tileSize = value;
+    this.reset();
+    this.initComponent();
+  }
+
+  start() {
+    this.initComponent();
+  }
+
+  private get json() {
+    return Convert.toLDtk(JSON.stringify(this.jsonFile.json));
+  }
+
+  private setNodeSize(json: LDtkModel, node: Node) {
+    node.getComponent(UITransform).setContentSize(json.width, json.height);
+  }
+
+  private resetNodeSize() {
+    this.node.getComponent(UITransform).setContentSize(0, 0);
+  }
+
+  private removeSubNodes() {
+    this.node.removeAllChildren();
+  }
+
+  private reset() {
+    this.resetNodeSize();
+    this.removeSubNodes();
+  }
+
+  private removeDebugNodes() {
+    const children = this.node.children;
+    for (const child of children) {
+      if (child.name.includes("debug")) {
+        child.destroy();
+      }
+    }
+  }
+
+  private createLayers() {
+    const { layers } = this.json;
+    for (const layer of layers) {
+      const name = layer.replace(".png", "");
+      const hasSubNode = this.node.getChildByName(name);
+      if (!hasSubNode) {
+        const subNode = this.createSubNode(name, this.node);
+        this.addLDtkLayerToSubNode(subNode);
+      }
+    }
+  }
+
+  private addLDtkLayerToSubNode(subNode: Node) {
+    const ldtkLayer = subNode.addComponent(LDtkLayer);
+  }
+
+//   private createDebugLayers() {
+//     const { layers } = this.json;
+//     for (const layer of layers) {
+//       const name = layer.replace(".png", "");
+//       const hasSubNode = this.node.getChildByName(`${name} debug`);
+//       if (!hasSubNode) {
+//       const subNode = this.createSubNode(`${name} debug`, this.node);
+//       this.addDebugToSubNode(subNode);
+//       }
+//     }
+//   }
+
+  private createSubNode(name: string, parent: Node) {
+    const node = new Node(name);
+    node.addComponent(UITransform);
+    this.setNodeSize(this.json, node);
+    node.setParent(parent);
+    return node;
+  }
+
+  private createSquareGeometry(x: number, y: number) {
+    const rectangle = math.rect(0, 0, this.tileSize, this.tileSize);
+    rectangle.x = x;
+    rectangle.y = y;
+    return rectangle;
+  }
+
+  private addDebugToSubNode(node: Node) {
+    const graphics = node.addComponent(Graphics);
+    graphics.lineWidth = 2;
+    graphics.strokeColor = new Color(255, 0, 0);
+    graphics.fillColor = new Color(255, 0, 0);
+    // this.polygons.forEach(polygon => {
+    //     const rect = this.createSquareGeometry(polygon.x * this.tileSize, polygon.y * this.tileSize);
+    //     graphics.rect(rect.x, rect.y, rect.width, rect.height);
+    //     graphics.stroke();
+    //     graphics.fill();
+    // });
+  }
+
+  private createMatrixFromCSV(csv: string) {
+    const lines = csv.trim().split("\n"); // Split the string into lines
+    return (
+      lines
+        // remove the last element of the array if is a comma
+        .map((line) =>
+          line
+            .split(",")
+            .filter((n) => n !== "")
+            .map((t) => parseInt(t))
+        )
+        .reverse()
+    );
+  }
+
+  private initComponent() {
+    console.log("initComponent", this._jsonFile);
+
+    if (!this.jsonFile) {
+      throw new Error("JSON data file is missing");
     }
 
-    set csvFile(value) {
-        this._csvFile = value;
-        this.initComponent();
-    }
 
-    @property({ type: SpriteFrame, displayName: 'Layer Image' })
-    get layerImage() {
-        return this._layerImage;
-    }
+    this.setNodeSize(this.json, this.node);
+    this.createLayers();
 
-    set layerImage(value) {
-        this._layerImage = value;
-        this.initComponent();
-    }
-
-    @property
-    get tileSize() {
-        return this._tileSize;
-    }
-
-    set tileSize(value) {
-        this._tileSize = value;
-        this.initComponent();
-    }
-
-    @property
-    get ignoredTileNumbers() {
-        return this._ignoredTileNumbers;
-    }
-
-    set ignoredTileNumbers(value) {
-        this._ignoredTileNumbers = value;
-        this.initComponent();
-    }
-
-    @property
-    get tileNumbers() {
-        return this._tileNumbers;
-    }
-
-    set tileNumbers(value) {
-        this._tileNumbers = value;
-        this.initComponent();
-    }
-
-
-    private matrix: number[][] = [];
-
-    private visited: number[][] = [];
-
-    public polygons: Vec3[] = [];
-
-    onLoad() {
-        this.initComponent();
-    }
-
-    reset() {
-        this.polygons = [];
-        this.visited = [];
-        this.matrix = [];
-        this.node.removeAllChildren();
-    }
-
-    initComponent() {
-
-        this.reset();
-
-        if (!this.csvFile || !this.layerImage) {
-            throw new Error('CSV file or Layer Image is missing');
-        }
-
-        this.createMatrixFromCSV(this.csvFile.text);
-        this.visited = this.matrix.map(() => []);
-        this.createPolygons();
-        this.createSpriteNode();
-        if (this.debug) {
-            this.createDebugNode();
-        } else {
-            this.removecreateDebugNode();
-        }
-        console.log(this.polygons);
-    }
-
-    private createDebugNode() {
-        this._debugNode = this.node.getChildByName('debug') || new Node('debug');
-        this._debugNode.parent = this.node;
-        this._debugNode.setPosition(0, 0, 0);
-        const graphics = this._debugNode.addComponent(Graphics);
-        graphics.lineWidth = 2;
-        graphics.strokeColor = new Color(255, 0, 0);
-        graphics.fillColor = new Color(255, 0, 0);
-        this.polygons.forEach(polygon => {
-            const rect = this.createSquareGeometry(polygon.x * this.tileSize, polygon.y * this.tileSize);
-            graphics.rect(rect.x, rect.y, rect.width, rect.height);
-            graphics.stroke();
-            graphics.fill();
-        });
-    }
-
-    private removecreateDebugNode() {
-        const graphics = this.node.getComponent(Graphics);
-        if (graphics) {
-            console.log('remove debug draw');
-            graphics.clear();
-            graphics.destroy();
-        }
-    }
-
-    private createSquareGeometry(x: number, y: number) {
-        const rectangle = math.rect(0, 0, this.tileSize, this.tileSize);
-        rectangle.x = x;
-        rectangle.y = y;
-        return rectangle;
-    }
-
-    private createSpriteNode() {
-        this._spriteNode = this.node.getChildByName('sprite') || new Node('sprite');
-        this._spriteNode.parent = this.node;
-        this._spriteNode.setPosition(0, 0, 0);
-        const sprite = this._spriteNode.addComponent(Sprite);
-        sprite.spriteFrame = this.layerImage;
-        sprite.sizeMode = Sprite.SizeMode.RAW;
-        sprite.trim = false;
-    }
-
-
-
-    private createPolygons() {
-        this.checkMatrixAtPosition(0, 0);
-    }
-
-    private checkMatrixAtPosition(row: number, col: number) {
-
-        // if row or col is out of bounds, return
-        if (row < 0 || col < 0 || row >= this.matrix.length || col >= this.matrix[0].length) {
-            console.log('out of bounds');
-            return;
-        }
-
-        // if tile is already visited, return
-        if (this.visited[row][col] === 1) {
-            console.log('already visited');
-            return;
-        }
-
-        // if tile is not visited, set it to visited
-        this.visited[row][col] = 1;
-
-        // if tile is in tileNumbers, check the surrounding tiles
-        this.checkMatrixAtPosition(row - 1, col);
-        this.checkMatrixAtPosition(row + 1, col);
-        this.checkMatrixAtPosition(row, col - 1);
-        this.checkMatrixAtPosition(row, col + 1);
-
-        // if tile is not in tileNumbers, return
-        if (!this.tileNumbers.split('').includes(this.matrix[row][col].toString())) {
-            console.log('not in tileNumbers', this.matrix[row][col]);
-            return;
-        }
-
-        // if tile is in ignoredTileNumbers, return
-        if (this.ignoredTileNumbers.split('').includes(this.matrix[row][col].toString())) {
-            console.log('in ignoredTileNumbers');
-            return;
-        }
-
-        // if tile is in tileNumbers, add it to the polygon
-        this.polygons.push(new Vec3(col, row, 0));
-
-
-
-    }
-
+    // this.createDebugLayers();
+  }
 }
-
