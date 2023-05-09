@@ -31,6 +31,8 @@ export class LDtkLayer extends Component {
   private _matrix: number[][] = [];
   private _tileWidth: number = 16;
   private _tileHeight: number = 16;
+  private _xOffset: number = 0;
+  private _yOffset: number = 0;
   private _visited: number[][] = [];
   private _debugNode: Node | null = null;
   private _debugGraphics: Graphics | null = null;
@@ -118,6 +120,8 @@ export class LDtkLayer extends Component {
   private reset() {
     this._matrix = [];
     this._visited = [];
+    this._xOffset = 0;
+    this._yOffset = 0;
     this._tileCoordinateGroups = new Map();
     this.destroyAllChildrenDebugNodes();
     this._debugNode = null;
@@ -188,6 +192,12 @@ export class LDtkLayer extends Component {
       col >= this._matrix[0].length
     ) {
       // console.log("out of bounds");
+      return;
+    }
+
+    // if tile is 0 (empty), return
+    if (this._matrix[row][col] === 0) {
+      // console.log("empty");
       return;
     }
 
@@ -268,15 +278,13 @@ export class LDtkLayer extends Component {
   }
 
   private createRectGroups() {
-    const { contentSize }= this.node.getComponent(UITransform);
-    const { width: leftDownToCenterX, height: leftDownToCenterY } = contentSize;
     this._tileCoordinateGroups.forEach((tileCoordinateGroup, groupName) => {
       this._tileRectGroups.set(groupName, []);
 
       tileCoordinateGroup.forEach((point) => {
         const rect = this.createRectGeometry(
-          point[0].x * this._tileWidth - leftDownToCenterX,
-          point[0].y * this._tileHeight - leftDownToCenterY
+          point[0].x * this._tileWidth - this._xOffset,
+          point[0].y * this._tileHeight - this._yOffset
         );
 
         const rectCoordinates = this.createRectCoordinates(rect);
@@ -345,7 +353,7 @@ export class LDtkLayer extends Component {
       Math.random() * 255,
       Math.random() * 255,
       Math.random() * 255,
-      255
+      128
     );
     points = points.slice(1);
     points.forEach((point) => {
@@ -374,7 +382,12 @@ export class LDtkLayer extends Component {
     this._debugGraphics.fillColor = new Color(255, 0, 0, 128);
     this._debugGraphics.lineCap = Graphics.LineCap.SQUARE;
     this._debugGraphics.lineJoin = Graphics.LineJoin.MITER;
+  }
 
+  private setOffset() {
+    const { contentSize } = this.node.getComponent(UITransform);
+    this._xOffset = contentSize.width / 2;
+    this._yOffset = contentSize.height / 2;
   }
 
 
@@ -382,6 +395,7 @@ export class LDtkLayer extends Component {
     console.log("initComponent", this._debug);
 
     this.reset();
+    this.setOffset();
 
     // add sprite component
     if (this._layerTexture) {
