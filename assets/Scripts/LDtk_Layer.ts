@@ -64,19 +64,6 @@ export class LDtkLayer extends Component {
   }
 
   @property
-  private _ignoredTiles: string = "0";
-
-  @property({ group: { name: 'Collisions' }})
-  get ignoredTiles() {
-    return this._ignoredTiles;
-  }
-
-  set ignoredTiles(value) {
-    this._ignoredTiles = value;
-    this.initComponent();
-  }
-
-  @property
   private _mergeRects: boolean = true;
 
   @property({ group: { name: 'Collisions' }})
@@ -176,7 +163,8 @@ export class LDtkLayer extends Component {
           this.checkMatrixAtPosition(
             rowIndex,
             colIndex,
-            `${rowIndex}_${colIndex}`
+            `${rowIndex}_${colIndex}`,
+            this._matrix[rowIndex][colIndex]
           );
         }
       });
@@ -191,7 +179,7 @@ export class LDtkLayer extends Component {
    * @param groupRef
    * @returns void
    */
-  private checkMatrixAtPosition(row: number, col: number, groupRef) {
+  private checkMatrixAtPosition(row: number, col: number, groupRef: string, value: number) {
     // if row or col is out of bounds, return
     if (
       row < 0 ||
@@ -209,26 +197,20 @@ export class LDtkLayer extends Component {
       return;
     }
 
-    // if tile is not visited, set it to visited
-    this._visited[row][col] = 1;
-
-    // if tile is in ignoredTiles, return
-    if (
-      this.ignoredTiles
-        .split(",")
-        // remove spaces
-        .map((tile) => tile.trim())
-        .includes(this._matrix[row][col].toString())
-    ) {
-      // console.log("in ignoredTiles");
+    // if tile's value is not the same as the current tile, return
+    if (this._matrix[row][col] !== value) {
+      // console.log("not the same value");
       return;
     }
 
+    // if tile is not visited, set it to visited
+    this._visited[row][col] = 1;
+
     // if tile is in tiles, check the surrounding tiles
-    this.checkMatrixAtPosition(row - 1, col, groupRef);
-    this.checkMatrixAtPosition(row + 1, col, groupRef);
-    this.checkMatrixAtPosition(row, col - 1, groupRef);
-    this.checkMatrixAtPosition(row, col + 1, groupRef);
+    this.checkMatrixAtPosition(row - 1, col, groupRef, value);
+    this.checkMatrixAtPosition(row + 1, col, groupRef, value);
+    this.checkMatrixAtPosition(row, col - 1, groupRef, value);
+    this.checkMatrixAtPosition(row, col + 1, groupRef, value);
 
     // if tile is in tiles, add it to the polygon
     const vec = new Vec2(col, row);
@@ -352,6 +334,19 @@ export class LDtkLayer extends Component {
 
   private drawDebugNode(points: Vec2[]) {
     this._debugGraphics?.moveTo(points[0].x, points[0].y);
+    // random color
+    this._debugGraphics.strokeColor = new Color(
+      Math.random() * 255,
+      Math.random() * 255,
+      Math.random() * 255,
+      255
+    );
+    this._debugGraphics.fillColor = new Color(
+      Math.random() * 255,
+      Math.random() * 255,
+      Math.random() * 255,
+      255
+    );
     points = points.slice(1);
     points.forEach((point) => {
       this._debugGraphics?.lineTo(point.x, point.y);
