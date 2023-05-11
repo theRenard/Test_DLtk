@@ -1,4 +1,27 @@
 {
   "__version__": "1.0.4",
-  "custom_joint_texture_layouts": []
+  "custom_joint_texture_layouts": [],
+  "physics": {
+    "collisionGroups": [
+      {
+        "index": 1,
+        "name": "FLOOR"
+      },
+      {
+        "index": 2,
+        "name": "STAIRS"
+      },
+      {
+        "index": 3,
+        "name": "FLOOR_2"
+      }
+    ],
+    "collisionMatrix": {
+      "0": 27,
+      "1": 17,
+      "2": 16,
+      "3": 17,
+      "4": 31
+    }
+  }
 }

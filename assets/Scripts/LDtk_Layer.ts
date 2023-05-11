@@ -7,6 +7,7 @@ import {
   Node,
   Color,
   BoxCollider2D,
+  PhysicsSystem2D,
 } from "cc";
 import { Vec2 } from "cc";
 import { _decorator, Component, Sprite, SpriteFrame, TextAsset } from "cc";
@@ -26,6 +27,8 @@ type Polygon = {
   regions: number[][][];
   inverted: boolean;
 };
+
+
 
 @ccclass("LDtkLayer")
 @executeInEditMode(true)
@@ -340,16 +343,18 @@ export class LDtkLayer extends Component {
               this.convertVec2ArrayToNumberArray(rectPoints);
             const polygon = this.createPolygon(tileRectGroupAsNumbers);
             result = window.PolyBool.union(result, polygon);
-            log("polygon", polygon);
           });
 
           const points = this.convertNumberArrayToVec2Array(result.regions[0]);
 
           if (!EDITOR) {
-            const collider = colliderNode.addComponent(PolygonCollider2D);
-            collider.editing = true;
-            collider.points = points;
-            collider.apply();
+          const collider = colliderNode.addComponent(PolygonCollider2D);
+          collider.editing = true;
+          collider.points = points;
+          collider.group = 1 << parseInt(value);
+          console.log(PhysicsSystem2D.instance.collisionMatrix);
+          console.log("collider", collider.group);
+          collider.apply();
           }
           if (this._debug) {
             this.drawDebugNode(points);
@@ -367,6 +372,7 @@ export class LDtkLayer extends Component {
                 points[2].x - points[0].x,
                 points[2].y - points[0].y
               );
+              collider.group = 1 << parseInt(value);
               collider.apply();
             }
             if (this._debug) {

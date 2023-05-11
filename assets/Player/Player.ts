@@ -32,8 +32,7 @@ export class Player extends Component {
   }
 
   onBeginContact(contact: any, selfCollider: any, otherCollider: any) {
-    const impulse = new Vec2(0.3, 0);
-    // this.rigidBody.applyLinearImpulseToCenter(impulse, true);
+    console.log("Collision detected");
   }
 
   onKeyDown(event: any) {
