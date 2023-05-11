@@ -1,12 +1,15 @@
-import { Graphics, PolygonCollider2D, UITransform, log, math, Node, Color } from "cc";
-import { Vec2 } from "cc";
 import {
-  _decorator,
-  Component,
-  Sprite,
-  SpriteFrame,
-  TextAsset,
+  Graphics,
+  PolygonCollider2D,
+  UITransform,
+  log,
+  math,
+  Node,
+  Color,
+  BoxCollider2D,
 } from "cc";
+import { Vec2 } from "cc";
+import { _decorator, Component, Sprite, SpriteFrame, TextAsset } from "cc";
 const { ccclass, property, executeInEditMode } = _decorator;
 import { EDITOR } from "cc/env";
 
@@ -22,8 +25,7 @@ declare global {
 type Polygon = {
   regions: number[][][];
   inverted: boolean;
-}
-
+};
 
 @ccclass("LDtkLayer")
 @executeInEditMode(true)
@@ -37,12 +39,13 @@ export class LDtkLayer extends Component {
   private _debugNode: Node | null = null;
   private _debugGraphics: Graphics | null = null;
   private _tileCoordinateGroups = new Map<string, Vec2[][]>(); // key: tileName, value: polygon
+  private _tileCoordinateGroupsByValue = new Map<string, Vec2[][][]>(); // key: tileValue, value: polygon[]
   private _tileRectGroups = new Map<string, [Vec2, Vec2, Vec2, Vec2][]>();
 
   @property(SpriteFrame)
   _layerTexture: SpriteFrame | null = null;
 
-  @property({ group: { name: 'Texture' }, type: SpriteFrame })
+  @property({ group: { name: "Texture" }, type: SpriteFrame })
   private get LayerTexture() {
     return this._layerTexture;
   }
@@ -55,7 +58,7 @@ export class LDtkLayer extends Component {
   @property({ type: TextAsset })
   _textAsset: TextAsset | null = null;
 
-  @property({ group: { name: 'Collisions' }, type: TextAsset })
+  @property({ group: { name: "Collisions" }, type: TextAsset })
   private get Collisions() {
     return this._textAsset;
   }
@@ -68,7 +71,7 @@ export class LDtkLayer extends Component {
   @property
   private _mergeRects: boolean = true;
 
-  @property({ group: { name: 'Collisions' }})
+  @property({ group: { name: "Collisions" } })
   private get mergeRects() {
     return this._mergeRects;
   }
@@ -80,7 +83,7 @@ export class LDtkLayer extends Component {
   @property
   _debug: boolean = false;
 
-  @property({  group: { name: 'Collisions' }})
+  @property({ group: { name: "Collisions" } })
   private get debug() {
     return this._debug;
   }
@@ -90,7 +93,7 @@ export class LDtkLayer extends Component {
     this.initComponent();
   }
 
-  @property({ group: { name: 'Collisions' }})
+  @property({ group: { name: "Collisions" } })
   private get tileWidth() {
     return this._tileWidth;
   }
@@ -100,7 +103,7 @@ export class LDtkLayer extends Component {
     this.initComponent();
   }
 
-  @property({ group: { name: 'Collisions' }})
+  @property({ group: { name: "Collisions" } })
   private get tileHeight() {
     return this._tileHeight;
   }
@@ -123,12 +126,12 @@ export class LDtkLayer extends Component {
     this._xOffset = 0;
     this._yOffset = 0;
     this._tileCoordinateGroups = new Map();
+    this._tileCoordinateGroupsByValue = new Map();
+    this._tileRectGroups = new Map();
     this.destroyAllChildrenDebugNodes();
+    this.destroyAllChildrenColliders();
+    this.destroyAllChildrenSprites();
     this._debugNode = null;
-    // remove all existing PolygonCollider2D components
-    this.node.getComponents(PolygonCollider2D).forEach((collider) => {
-      collider.destroy();
-    });
   }
 
   /**
@@ -137,6 +140,22 @@ export class LDtkLayer extends Component {
   private destroyAllChildrenDebugNodes() {
     this.node.children.forEach((child) => {
       if (child.name.includes(this.node.name + "_debug")) {
+        child.destroy();
+      }
+    });
+  }
+
+  private destroyAllChildrenColliders() {
+    this.node.children.forEach((child) => {
+      if (child.name.includes("Colliders_")) {
+        child.destroy();
+      }
+    });
+  }
+
+  private destroyAllChildrenSprites() {
+    this.node.children.forEach((child) => {
+      if (child.name.includes("Texture")) {
         child.destroy();
       }
     });
@@ -175,7 +194,6 @@ export class LDtkLayer extends Component {
     });
   }
 
-
   /**
    * @description: Check the surrounding tiles of the current tile
    * @param row
@@ -183,7 +201,12 @@ export class LDtkLayer extends Component {
    * @param groupRef
    * @returns void
    */
-  private checkMatrixAtPosition(row: number, col: number, groupRef: string, value: number) {
+  private checkMatrixAtPosition(
+    row: number,
+    col: number,
+    groupRef: string,
+    value: number
+  ) {
     // if row or col is out of bounds, return
     if (
       row < 0 ||
@@ -225,13 +248,14 @@ export class LDtkLayer extends Component {
     // if tile is in tiles, add it to the polygon
     const vec = new Vec2(col, row);
 
-    if (this._tileCoordinateGroups.has(groupRef)) {
-      this._tileCoordinateGroups.get(groupRef)?.push([vec]);
+    const groupName = `Layer_${this.node.name}.position_${groupRef}.value_${value}`;
+
+    if (this._tileCoordinateGroups.has(groupName)) {
+      this._tileCoordinateGroups.get(groupName)?.push([vec]);
     } else {
-      this._tileCoordinateGroups.set(groupRef, [[vec]]);
+      this._tileCoordinateGroups.set(groupName, [[vec]]);
     }
   }
-
 
   /**
    * @description: Create a rectangle geometry
@@ -240,12 +264,7 @@ export class LDtkLayer extends Component {
    * @returns Rect
    */
   private createRectGeometry(x: number, y: number) {
-    const rect = math.rect(
-      0,
-      0,
-      this._tileWidth,
-      this._tileHeight
-    );
+    const rect = math.rect(0, 0, this._tileWidth, this._tileHeight);
     rect.x = x;
     rect.y = y;
     return rect;
@@ -264,7 +283,7 @@ export class LDtkLayer extends Component {
     return {
       regions: [polygon], // each region is a list of points
       inverted: false,
-    }
+    };
   }
 
   // convert array of Vec2 to array of [x, y]
@@ -294,40 +313,40 @@ export class LDtkLayer extends Component {
     });
   }
 
-  private createPolygonColliders() {
+  private aggregateRectGroupsByValue() {
     this._tileRectGroups.forEach((tileRectGroup, groupName) => {
-
-      if (this._mergeRects) {
-
-        let result: Polygon = { regions: [], inverted: false };
-
-        tileRectGroup.forEach((rectPoints) => {
-
-          const tileRectGroupAsNumbers = this.convertVec2ArrayToNumberArray(rectPoints);
-          const polygon = this.createPolygon(tileRectGroupAsNumbers);
-          result = window.PolyBool.union(result, polygon);
-          log("polygon", polygon);
-
-        });
-
-        const points = this.convertNumberArrayToVec2Array(result.regions[0]);
-
-        if (!EDITOR) {
-          const collider = this.node.addComponent(PolygonCollider2D);
-          collider.editing = true;
-          collider.points = points;
-          collider.apply();
-        }
-        if (this._debug) {
-          this.drawDebugNode(points);
-        }
-
+      // get the value "2" as string from the group name like 'Layer_Collisions.position_0_20.value_2'
+      const value = groupName.split("value_")[1];
+      if (this._tileCoordinateGroupsByValue.has(value)) {
+        this._tileCoordinateGroupsByValue.get(value)?.push(tileRectGroup);
       } else {
+        this._tileCoordinateGroupsByValue.set(value, [tileRectGroup]);
+      }
+    });
+  }
 
-        tileRectGroup.forEach((points) => {
+  private createPolygonColliders() {
+    this._tileCoordinateGroupsByValue.forEach((tileRectGroupByValue, value) => {
+
+      const colliderNode = new Node(`Colliders_${value}`);
+      this.node.addChild(colliderNode);
+
+      tileRectGroupByValue.forEach((tileRectGroup) => {
+        if (this._mergeRects) {
+          let result: Polygon = { regions: [], inverted: false };
+
+          tileRectGroup.forEach((rectPoints) => {
+            const tileRectGroupAsNumbers =
+              this.convertVec2ArrayToNumberArray(rectPoints);
+            const polygon = this.createPolygon(tileRectGroupAsNumbers);
+            result = window.PolyBool.union(result, polygon);
+            log("polygon", polygon);
+          });
+
+          const points = this.convertNumberArrayToVec2Array(result.regions[0]);
 
           if (!EDITOR) {
-            const collider = this.node.addComponent(PolygonCollider2D);
+            const collider = colliderNode.addComponent(PolygonCollider2D);
             collider.editing = true;
             collider.points = points;
             collider.apply();
@@ -335,8 +354,27 @@ export class LDtkLayer extends Component {
           if (this._debug) {
             this.drawDebugNode(points);
           }
-        });
-      }
+        } else {
+          tileRectGroup.forEach((points) => {
+            if (!EDITOR) {
+              const collider = this.node.addComponent(BoxCollider2D);
+              collider.editing = true;
+              collider.offset = new Vec2(
+                (points[0].x + points[2].x) / 2,
+                (points[0].y + points[2].y) / 2
+              );
+              collider.size = math.size(
+                points[2].x - points[0].x,
+                points[2].y - points[0].y
+              );
+              collider.apply();
+            }
+            if (this._debug) {
+              this.drawDebugNode(points);
+            }
+          });
+        }
+      });
     });
   }
 
@@ -390,19 +428,28 @@ export class LDtkLayer extends Component {
     this._yOffset = contentSize.height / 2;
   }
 
+  private createSpriteNode() {
+    const spriteNode = new Node("Texture");
+    spriteNode.parent = this.node;
+    spriteNode.addComponent(UITransform).setContentSize(
+      this.node.getComponent(UITransform).contentSize
+    );
+    spriteNode.setPosition(0, 0, 0);
+    const spriteComponent = spriteNode.addComponent(Sprite);
+    spriteComponent.spriteFrame = this._layerTexture;
+  }
 
   private initComponent() {
-    console.log("initComponent", this._debug);
+    log("initComponent", this._debug);
 
     this.reset();
     this.setOffset();
 
     // add sprite component
     if (this._layerTexture) {
-      const spriteComponent = this.getComponent(Sprite) || this.addComponent(Sprite);
-      spriteComponent.spriteFrame = this._layerTexture;
+      this.createSpriteNode();
     } else {
-      this.getComponent(Sprite) && this.getComponent(Sprite).destroy();
+      log("No texture found for layer", this.node.name);
     }
 
     // add collision component
@@ -412,10 +459,10 @@ export class LDtkLayer extends Component {
       if (this.debug) this.createDebugNode();
       this.createTileGroups();
       this.createRectGroups();
+      this.aggregateRectGroupsByValue();
       this.createPolygonColliders();
-      console.log("this._tileRectGroups", this._tileRectGroups);
+    } else {
+      log("No CSV found for layer", this.node.name);
     }
-
-
   }
 }
