@@ -1,0 +1,163 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$ref": "#/definitions/LDtk",
+  "definitions": {
+      "LDtk": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+              "identifier": {
+                  "type": "string"
+              },
+              "uniqueIdentifer": {
+                  "type": "string",
+                  "format": "uuid"
+              },
+              "x": {
+                  "type": "integer"
+              },
+              "y": {
+                  "type": "integer"
+              },
+              "width": {
+                  "type": "integer"
+              },
+              "height": {
+                  "type": "integer"
+              },
+              "bgColor": {
+                  "type": "string"
+              },
+              "neighbourLevels": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/NeighbourLevel"
+                  }
+              },
+              "customFields": {
+                  "$ref": "#/definitions/LDtkCustomFields"
+              },
+              "layers": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              },
+              "entities": {
+                  "$ref": "#/definitions/Entities"
+              }
+          },
+          "required": [
+              "customFields",
+              "entities",
+              "height",
+              "identifier",
+              "layers",
+              "neighbourLevels",
+              "uniqueIdentifer",
+              "width",
+              "x",
+              "y"
+          ],
+          "title": "LDtk"
+      },
+      "LDtkCustomFields": {
+          "type": "object",
+          "additionalProperties": false,
+          "title": "LDtkCustomFields"
+      },
+      "Entities": {
+          "type": "object",
+          "additionalProperties": true,
+          "patternProperties": {
+              "^.*$": {
+                  "type": "array",
+                  "items": {
+                      "$ref": "#/definitions/Entity"
+                  }
+              }
+          },
+          "title": "Entities"
+      },
+      "Entity": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+              "id": {
+                  "type": "string"
+              },
+              "iid": {
+                  "type": "string",
+                  "format": "uuid"
+              },
+              "layer": {
+                  "type": "string"
+              },
+              "x": {
+                  "type": "integer"
+              },
+              "y": {
+                  "type": "integer"
+              },
+              "width": {
+                  "type": "integer"
+              },
+              "height": {
+                  "type": "integer"
+              },
+              "color": {
+                  "type": "integer"
+              },
+              "customFields": {
+                  "$ref": "#/definitions/EntityCustomFields"
+              }
+          },
+          "required": [
+              "color",
+              "customFields",
+              "height",
+              "id",
+              "iid",
+              "layer",
+              "width",
+              "x",
+              "y"
+          ],
+          "title": "Entity"
+      },
+      "EntityCustomFields": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+              "items": {
+                  "type": "array",
+                  "items": {
+                      "type": "string"
+                  }
+              }
+          },
+          "required": [
+              "items"
+          ],
+          "title": "EntityCustomFields"
+      },
+      "NeighbourLevel": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+              "levelIid": {
+                  "type": "string",
+                  "format": "uuid"
+              },
+              "dir": {
+                  "type": "string"
+              }
+          },
+          "required": [
+              "dir",
+              "levelIid"
+          ],
+          "title": "NeighbourLevel"
+      }
+  }
+}

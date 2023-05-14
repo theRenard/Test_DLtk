@@ -8,8 +8,28 @@ import {
 const { ccclass, property, executeInEditMode } = _decorator;
 import { Convert, LDtk as LDtkModel } from "./Convert";
 import { LDtkLayer } from "./LDtk_Layer";
+import { LDtkEntities } from "./LDtk_Entities";
+import { transformToCenter, flipYPosition, transformEntityPositionToCocosPosition } from "./LDtk_Utilities";
 
-export interface CustomFields {}
+export type Entity = {
+	id?:           string;
+	iid?:          string;
+	layer?:        string;
+	x?:            number;
+	y?:            number;
+	width?:        number;
+	height?:       number;
+	color?:        number;
+	customFields?: {
+    [key: string]: any;
+  };
+}[];
+
+export type LDtkModelExtended = LDtkModel & {
+  entities: {
+    [key: string]: Entity;
+  };
+};
 
 @ccclass("LDtk")
 @executeInEditMode(true)
@@ -36,8 +56,19 @@ export class LDtk extends Component {
     return Convert.toLDtk(JSON.stringify(this.jsonFile.json));
   }
 
-  private setNodeSize(json: LDtkModel, node: Node) {
-    node.getComponent(UITransform).setContentSize(json.width, json.height);
+  private setNodeSizeAndPosition() {
+    const { x, y, width, height } = this.json;
+    const uiTransform = this.node.getComponent(UITransform)
+    uiTransform.setContentSize(width, height);
+    uiTransform.setAnchorPoint(0.5, 0.5);
+
+    const yCocos = flipYPosition(y, height);
+    const pos = transformToCenter({ x, y: yCocos, width, height });
+    this.node.setPosition(pos.x, pos.y);
+  }
+
+  private setNodeName() {
+    this.node.name = this.json.identifier;
   }
 
   private resetNodeSize() {
@@ -53,7 +84,7 @@ export class LDtk extends Component {
     this.removeSubNodes();
   }
 
-  private createLayers() {
+  private createTextureAndCollisionsLayers() {
     const { layers } = this.json;
     for (const layer of layers) {
       const name = layer.replace(".png", "");
@@ -65,26 +96,35 @@ export class LDtk extends Component {
     }
   }
 
+  private createEntitiesLayer() {
+    const hasSubNode = this.node.getChildByName("Entities");
+    if (!hasSubNode) {
+      const entitiesNode = this.createSubNode("Entities", this.node);
+      const entitiesComp = entitiesNode.addComponent(LDtkEntities);
+      entitiesComp.setEntities(this.json.entities);
+      entitiesComp.initComponent();
+    }
+  }
+
   private addLDtkLayerToSubNode(subNode: Node) {
     subNode.addComponent(LDtkLayer);
   }
 
   private createSubNode(name: string, parent: Node) {
     const node = new Node(name);
-    node.addComponent(UITransform);
-    this.setNodeSize(this.json, node);
+    node.addComponent(UITransform).setContentSize(this.json.width, this.json.height);
     node.setParent(parent);
+    node.setPosition(0, 0);
     return node;
   }
 
   private initComponent() {
-    console.log("initComponent", this._jsonFile);
-
     if (!this.jsonFile) {
       throw new Error("JSON data file is missing");
     }
-
-    this.setNodeSize(this.json, this.node);
-    this.createLayers();
+    this.setNodeSizeAndPosition();
+    this.setNodeName();
+    this.createTextureAndCollisionsLayers();
+    this.createEntitiesLayer();
   }
 }

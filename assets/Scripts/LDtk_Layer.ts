@@ -348,6 +348,7 @@ export class LDtkLayer extends Component {
           const points = this.convertNumberArrayToVec2Array(result.regions[0]);
 
           if (!EDITOR) {
+          }
           const collider = colliderNode.addComponent(PolygonCollider2D);
           collider.editing = true;
           collider.points = points;
@@ -355,7 +356,6 @@ export class LDtkLayer extends Component {
           console.log(PhysicsSystem2D.instance.collisionMatrix);
           console.log("collider", collider.group);
           collider.apply();
-          }
           if (this._debug) {
             this.drawDebugNode(points);
           }

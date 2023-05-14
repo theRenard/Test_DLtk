@@ -7,103 +7,26 @@
 // These functions will throw an error if the JSON doesn't
 // match the expected interface, even if the JSON is valid.
 
-export interface LDtk {
+export type LDtk = {
+  bgColor?:        string;
+  customFields:    LDtkCustomFields;
+  entities:        { [key: string]: any };
+  height:          number;
   identifier:      string;
+  layers:          string[];
+  neighbourLevels: NeighbourLevel[];
   uniqueIdentifer: string;
+  width:           number;
   x:               number;
   y:               number;
-  width:           number;
-  height:          number;
-  bgColor:         string;
-  neighbourLevels: NeighbourLevel[];
-  customFields:    LDtkCustomFields;
-  layers:          string[];
-  entities:        Entities;
 }
 
-export interface LDtkCustomFields {
+export type LDtkCustomFields = {
 }
 
-export interface Entities {
-  Player: Player[];
-  Chest:  Chest[];
-  Mob:    Mob[];
-  Door:   Door[];
-}
-
-export interface Chest {
-  id:           string;
-  iid:          string;
-  layer:        string;
-  x:            number;
-  y:            number;
-  width:        number;
-  height:       number;
-  color:        number;
-  customFields: ChestCustomFields;
-}
-
-export interface ChestCustomFields {
-  content: string[];
-}
-
-export interface Door {
-  id:           string;
-  iid:          string;
-  layer:        string;
-  x:            number;
-  y:            number;
-  width:        number;
-  height:       number;
-  color:        number;
-  customFields: DoorCustomFields;
-}
-
-export interface DoorCustomFields {
-  locked: boolean;
-}
-
-export interface Mob {
-  id:           string;
-  iid:          string;
-  layer:        string;
-  x:            number;
-  y:            number;
-  width:        number;
-  height:       number;
-  color:        number;
-  customFields: MobCustomFields;
-}
-
-export interface MobCustomFields {
-  patrol: Patrol[];
-  loot:   string[];
-}
-
-export interface Patrol {
-  cx: number;
-  cy: number;
-}
-
-export interface Player {
-  id:           string;
-  iid:          string;
-  layer:        string;
-  x:            number;
-  y:            number;
-  width:        number;
-  height:       number;
-  color:        number;
-  customFields: PlayerCustomFields;
-}
-
-export interface PlayerCustomFields {
-  items: string[];
-}
-
-export interface NeighbourLevel {
-  levelIid: string;
+export type NeighbourLevel = {
   dir:      string;
+  levelIid: string;
 }
 
 // Converts JSON strings to/from your types
@@ -272,89 +195,22 @@ function r(name: string) {
 
 const typeMap: any = {
   "LDtk": o([
+      { json: "bgColor", js: "bgColor", typ: u(undefined, "") },
+      { json: "customFields", js: "customFields", typ: r("LDtkCustomFields") },
+      { json: "entities", js: "entities", typ: m("any") },
+      { json: "height", js: "height", typ: 0 },
       { json: "identifier", js: "identifier", typ: "" },
+      { json: "layers", js: "layers", typ: a("") },
+      { json: "neighbourLevels", js: "neighbourLevels", typ: a(r("NeighbourLevel")) },
       { json: "uniqueIdentifer", js: "uniqueIdentifer", typ: "" },
+      { json: "width", js: "width", typ: 0 },
       { json: "x", js: "x", typ: 0 },
       { json: "y", js: "y", typ: 0 },
-      { json: "width", js: "width", typ: 0 },
-      { json: "height", js: "height", typ: 0 },
-      { json: "bgColor", js: "bgColor", typ: "" },
-      { json: "neighbourLevels", js: "neighbourLevels", typ: a(r("NeighbourLevel")) },
-      { json: "customFields", js: "customFields", typ: r("LDtkCustomFields") },
-      { json: "layers", js: "layers", typ: a("") },
-      { json: "entities", js: "entities", typ: r("Entities") },
   ], false),
   "LDtkCustomFields": o([
   ], false),
-  "Entities": o([
-      { json: "Player", js: "Player", typ: a(r("Player")) },
-      { json: "Chest", js: "Chest", typ: a(r("Chest")) },
-      { json: "Mob", js: "Mob", typ: a(r("Mob")) },
-      { json: "Door", js: "Door", typ: a(r("Door")) },
-  ], false),
-  "Chest": o([
-      { json: "id", js: "id", typ: "" },
-      { json: "iid", js: "iid", typ: "" },
-      { json: "layer", js: "layer", typ: "" },
-      { json: "x", js: "x", typ: 0 },
-      { json: "y", js: "y", typ: 0 },
-      { json: "width", js: "width", typ: 0 },
-      { json: "height", js: "height", typ: 0 },
-      { json: "color", js: "color", typ: 0 },
-      { json: "customFields", js: "customFields", typ: r("ChestCustomFields") },
-  ], false),
-  "ChestCustomFields": o([
-      { json: "content", js: "content", typ: a("") },
-  ], false),
-  "Door": o([
-      { json: "id", js: "id", typ: "" },
-      { json: "iid", js: "iid", typ: "" },
-      { json: "layer", js: "layer", typ: "" },
-      { json: "x", js: "x", typ: 0 },
-      { json: "y", js: "y", typ: 0 },
-      { json: "width", js: "width", typ: 0 },
-      { json: "height", js: "height", typ: 0 },
-      { json: "color", js: "color", typ: 0 },
-      { json: "customFields", js: "customFields", typ: r("DoorCustomFields") },
-  ], false),
-  "DoorCustomFields": o([
-      { json: "locked", js: "locked", typ: true },
-  ], false),
-  "Mob": o([
-      { json: "id", js: "id", typ: "" },
-      { json: "iid", js: "iid", typ: "" },
-      { json: "layer", js: "layer", typ: "" },
-      { json: "x", js: "x", typ: 0 },
-      { json: "y", js: "y", typ: 0 },
-      { json: "width", js: "width", typ: 0 },
-      { json: "height", js: "height", typ: 0 },
-      { json: "color", js: "color", typ: 0 },
-      { json: "customFields", js: "customFields", typ: r("MobCustomFields") },
-  ], false),
-  "MobCustomFields": o([
-      { json: "patrol", js: "patrol", typ: a(r("Patrol")) },
-      { json: "loot", js: "loot", typ: a("") },
-  ], false),
-  "Patrol": o([
-      { json: "cx", js: "cx", typ: 0 },
-      { json: "cy", js: "cy", typ: 0 },
-  ], false),
-  "Player": o([
-      { json: "id", js: "id", typ: "" },
-      { json: "iid", js: "iid", typ: "" },
-      { json: "layer", js: "layer", typ: "" },
-      { json: "x", js: "x", typ: 0 },
-      { json: "y", js: "y", typ: 0 },
-      { json: "width", js: "width", typ: 0 },
-      { json: "height", js: "height", typ: 0 },
-      { json: "color", js: "color", typ: 0 },
-      { json: "customFields", js: "customFields", typ: r("PlayerCustomFields") },
-  ], false),
-  "PlayerCustomFields": o([
-      { json: "items", js: "items", typ: a("") },
-  ], false),
   "NeighbourLevel": o([
-      { json: "levelIid", js: "levelIid", typ: "" },
       { json: "dir", js: "dir", typ: "" },
+      { json: "levelIid", js: "levelIid", typ: "" },
   ], false),
 };
