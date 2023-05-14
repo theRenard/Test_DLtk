@@ -6,10 +6,10 @@ import {
   UITransform,
 } from "cc";
 const { ccclass, property, executeInEditMode } = _decorator;
-import { Convert, LDtk as LDtkModel } from "./Convert";
+import { Convert, LDtk as LDtkModel } from "../LDtk_Scripts/Convert";
 import { LDtkLayer } from "./LDtk_Layer";
-import { LDtkEntities } from "./LDtk_Entities";
-import { transformToCenter, flipYPosition, transformEntityPositionToCocosPosition } from "./LDtk_Utilities";
+import { LDtkEntities } from "../LDtk_Scripts/LDtk_Entities";
+import { transformToCenter, flipYPosition } from "./LDtk_Utilities";
 
 export type Entity = {
 	id?:           string;
@@ -37,6 +37,8 @@ export class LDtk extends Component {
   @property
   private _jsonFile: null | JsonAsset = null;
 
+  uiTransform: UITransform | null = null;
+
   @property({ type: JsonAsset, displayName: "LDtk data" })
   get jsonFile() {
     return this._jsonFile;
@@ -58,9 +60,9 @@ export class LDtk extends Component {
 
   private setNodeSizeAndPosition() {
     const { x, y, width, height } = this.json;
-    const uiTransform = this.node.getComponent(UITransform)
-    uiTransform.setContentSize(width, height);
-    uiTransform.setAnchorPoint(0.5, 0.5);
+    this.uiTransform = this.node.getComponent(UITransform) || this.node.addComponent(UITransform);
+    this.uiTransform.setContentSize(width, height);
+    this.uiTransform.setAnchorPoint(0.5, 0.5);
 
     const yCocos = flipYPosition(y, height);
     const pos = transformToCenter({ x, y: yCocos, width, height });
@@ -71,17 +73,8 @@ export class LDtk extends Component {
     this.node.name = this.json.identifier;
   }
 
-  private resetNodeSize() {
-    this.node.getComponent(UITransform).setContentSize(0, 0);
-  }
-
-  private removeSubNodes() {
-    this.node.removeAllChildren();
-  }
-
   private reset() {
-    this.resetNodeSize();
-    this.removeSubNodes();
+    this.node.removeAllChildren();
   }
 
   private createTextureAndCollisionsLayers() {
@@ -105,7 +98,8 @@ export class LDtk extends Component {
 
   private createSubNode(name: string, parent: Node) {
     const node = new Node(name);
-    node.addComponent(UITransform).setContentSize(this.json.width, this.json.height);
+    const uiTransform = node.addComponent(UITransform);
+    uiTransform.setContentSize(this.json.width, this.json.height);
     node.setParent(parent);
     node.setPosition(0, 0);
     return node;

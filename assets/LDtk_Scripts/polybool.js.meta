@@ -2,7 +2,7 @@
   "ver": "4.0.23",
   "importer": "javascript",
   "imported": true,
-  "uuid": "adaf6bc1-b031-4928-8635-132fae46b115",
+  "uuid": "4f0e9729-c07c-477c-8d35-308ea11358b4",
   "files": [
     ".js"
   ],
@@ -10,8 +10,7 @@
   "userData": {
     "isPlugin": true,
     "loadPluginInEditor": true,
-    "loadPluginInWeb": true,
-    "loadPluginInNative": false,
-    "executionScope": "enclosed"
+    "loadPluginInNative": true,
+    "loadPluginInWeb": true
   }
 }

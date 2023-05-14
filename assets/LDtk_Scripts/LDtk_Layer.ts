@@ -427,7 +427,7 @@ export class LDtkLayer extends Component {
   }
 
   private setOffset() {
-    const { contentSize } = this.node.getComponent(UITransform);
+    const { contentSize } = this.node.getComponent(UITransform) || this.node.addComponent(UITransform);
     this._xOffset = contentSize.width / 2;
     this._yOffset = contentSize.height / 2;
   }

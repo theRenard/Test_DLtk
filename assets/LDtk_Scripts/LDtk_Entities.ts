@@ -1,8 +1,8 @@
-import { _decorator, Color, Component, Graphics, Rect, Size, Sprite, SpriteFrame, TextAsset, UITransform } from "cc";
+import { _decorator, Color, Component, Graphics, UITransform } from "cc";
 const { ccclass, executeInEditMode } = _decorator;
 import { EDITOR } from "cc/env";
 import { Entity } from "./LDtk";
-import { transformEntityPositionToCocosPosition, transformToCenter } from "./LDtk_Utilities";
+import { transformEntityPositionToCocosPosition } from "./LDtk_Utilities";
 
 
 @ccclass("LDtkEntities")
@@ -22,7 +22,7 @@ export class LDtkEntities extends Component {
 	}
 
   private setOffset() {
-    const { contentSize } = this.node.getComponent(UITransform);
+    const { contentSize } = this.node.getComponent(UITransform) || this.node.addComponent(UITransform);
     this._xOffset = contentSize.width / 2;
     this._yOffset = contentSize.height / 2;
   }
