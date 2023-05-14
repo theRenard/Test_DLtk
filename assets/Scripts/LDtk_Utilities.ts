@@ -1,10 +1,10 @@
 export function transformEntityPositionToCocosPosition({ x, y, width, height, }, { xOffset, yOffset, }) {
-  const xAdapted = x - xOffset;
-  const yAdapted = y - yOffset;
+  const xTranslated = x - xOffset;
+  const yTranslated = y - yOffset;
   // invert y axis
-  const yInverted = flipYPosition(yAdapted, height);
+  const yInverted = flipYPosition(yTranslated, height);
   // simulate anchor point at center
-  return { x: xAdapted, y: yInverted + height };
+  return { x: xTranslated - (width / 2), y: yInverted + height };
 }
 
 export function flipYPosition(y, height) {

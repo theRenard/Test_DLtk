@@ -353,8 +353,6 @@ export class LDtkLayer extends Component {
           collider.editing = true;
           collider.points = points;
           collider.group = 1 << parseInt(value);
-          console.log(PhysicsSystem2D.instance.collisionMatrix);
-          console.log("collider", collider.group);
           collider.apply();
           if (this._debug) {
             this.drawDebugNode(points);

@@ -91,23 +91,16 @@ export class LDtk extends Component {
       const hasSubNode = this.node.getChildByName(name);
       if (!hasSubNode) {
         const subNode = this.createSubNode(name, this.node);
-        this.addLDtkLayerToSubNode(subNode);
+        subNode.addComponent(LDtkLayer);
       }
     }
   }
 
   private createEntitiesLayer() {
-    const hasSubNode = this.node.getChildByName("Entities");
-    if (!hasSubNode) {
-      const entitiesNode = this.createSubNode("Entities", this.node);
-      const entitiesComp = entitiesNode.addComponent(LDtkEntities);
-      entitiesComp.setEntities(this.json.entities);
-      entitiesComp.initComponent();
-    }
-  }
-
-  private addLDtkLayerToSubNode(subNode: Node) {
-    subNode.addComponent(LDtkLayer);
+    const entitiesNode = this.node.getChildByName("Entities") || this.createSubNode("Entities", this.node);
+    const entitiesComp = entitiesNode.getComponent(LDtkEntities) || entitiesNode.addComponent(LDtkEntities);
+    entitiesComp.setEntities(this.json.entities);
+    console.log('here', this.json.entities);
   }
 
   private createSubNode(name: string, parent: Node) {
